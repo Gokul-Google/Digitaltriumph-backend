@@ -24,7 +24,7 @@ let session  = sessionStore[sessionId];
       const parent = await slack.chat.postMessage({
         channel: process.env.SLACK_CHANNEL_ID,
        // text: `Session: ${sessionId}|New Chat`,
-       text: `User: ${userName} (${userId})\nSession: ${sessionId}`,
+       text: `User: ${userName || "Guest"} (${userId || "N/A"})\nSession: ${sessionId}`,
       });
      let  threadTs = parent.ts;
       sessionStore[sessionId] = {
@@ -113,16 +113,16 @@ router.get("/messages", async (req, res) => {
       return res.status(400).json({ error: "sessionId required" });
     }
 
-    const threadTs = sessionStore[sessionId];
+    const session = sessionStore[sessionId];
 
     // No messages yet for this session
-    if (!threadTs) {
+    if (!session) {
       return res.json([]);
     }
 
     const replies = await slack.conversations.replies({
       channel: process.env.SLACK_CHANNEL_ID,
-      ts: threadTs,
+      ts: session.threadTs,
     });
 
     const messages = replies.messages.slice(1).map(m => ({
