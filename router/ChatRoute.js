@@ -128,7 +128,8 @@ router.get("/messages", async (req, res) => {
     const messages = replies.messages.slice(1).map(m => ({
       text:cleanSlackText(m.text),
       ts: m.ts,
-      from: m.bot_id ? "slack" : "user",
+     // from: m.bot_id ? "slack" : "user",
+     from: m.bot_id ? "slack" : "user",
     }));
 
     // Slack already returns ordered, but keep safe
@@ -175,5 +176,39 @@ router.delete("/clear-slack-history", async (req, res) => {
     res.status(500).json({ error: "Failed to clear Slack history" });
   }
 });
+//Admin reply route
+router.post("/admin/reply", async (req, res) => {
+  try {
+    const { sessionId, message } = req.body;
+
+    const session = sessionStore[sessionId];
+    if (!session) {
+      return res.status(404).json({ error: "Session not found" });
+    }
+
+    const result = await slack.chat.postMessage({
+      channel: process.env.SLACK_CHANNEL_ID,
+      thread_ts: session.threadTs,
+      text: message
+    });
+
+    res.json({ success: true, ts: result.ts });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Admin reply failed" });
+  }
+});
+
+
+// Admin GET ALL ACTIVE SESSIONS
+router.get("/sessions", (req, res) => {
+  const sessions = Object.entries(sessionStore).map(([sessionId, data]) => ({
+    sessionId,
+    userName: data.userName || "Guest",
+  }));
+
+  res.json(sessions);
+});
+
 
 module.exports = router;

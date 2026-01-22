@@ -59,7 +59,7 @@ app.use("/api", gaRoute);
 app.use(globalErrorHandler);
 
 app.listen(config.PORT || 4040, () => {
-  console.log("🚀 Server + Socket.IO running on http://localhost:4040");
+  console.log("🚀 Server running on http://localhost:4040");
 });
 
 
