@@ -1,19 +1,35 @@
 const GroupedProject = require('../models/ProjectGroups');
+const TimeSheet = require('../models/TimeSheetModel');
+
 
 const groupProject = async (req, res) => {
   try {
     const { projectId, projectType, staff, projectTitle, clientName } = req.body;
 
-    if (!projectId || !staff?.length || !projectTitle) {
+    if (!projectId  || !Array.isArray(staff) || staff.length === 0 || !projectTitle) {
       return res.status(400).json({ message: "Invalid Data" });
     }
+ 
+    const timeSheet = await TimeSheet.findById(projectId);
+    if (!timeSheet) {
+      return res.status(404).json({ message: "Timesheet not found" });
+    }
+
+    // const generatedProjectId = timeSheet.projectId;
 
     const groupedProject = await GroupedProject.create({
-      projectId,
+ 
+      // projectId : generatedProjectId,
+       projectId: timeSheet._id,             // Timesheet document _id
+  generatedProjectId: timeSheet.projectId, // ✅ From TimeSheet.projectId
       projectTitle,
       projectType,
+     status: "Initial",
+      testingSiteLink: null,
+      finalSiteLink: null,
+      buildFileLink: null,
       clientName,
-      staff: staff.map(s=>({staffId:s._id, name: s.name, staffRole:s.staffRole }))
+      staff: staff.map(s=>({staffId:s.staffId, name: s.name, staffRole:s.staffRole }))
     });
 
     res.status(201).json({
@@ -22,7 +38,8 @@ const groupProject = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("GROUP PROJECT ERROR:", error);
+  res.status(500).json({ message: error.message, stack: error.stack });
   }
 };
 
@@ -35,42 +52,54 @@ const groupedProjects = async (req, res) => {
   }
 };
 
-const updateProjectGroup = async (req, res) =>{
+const updateProjectGroup = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { staff, status, testingSiteLink, finalSiteLink, buildFileLink } = req.body;
 
-    try {
-        const { id } = req.params;
-    const { staff } = req.body;
-
-    // ✅ validate input
-    if (!Array.isArray(staff) || staff.length === 0) {
-      return res.status(400).json({ message: "Staff is required" });
+    const project = await GroupedProject.findById(id);
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
     }
 
-    const existProjectGroup = await GroupedProject.findById(id);
-
-     if (!existProjectGroup) {
-      return res.status(404).json({ message: "Project group not found" });
+    // ✅ Update staff
+    if (Array.isArray(staff)) {
+      project.staff = staff.map(s => ({
+        staffId: s.staffId || s._id,
+        name: s.name,
+        staffRole: s.staffRole,
+      }));
     }
-     existProjectGroup.staff = staff;
 
-  existProjectGroup.staff = staff.map(s => ({
-      staffId: s._id,
-      name: s.name,
-      staffRole: s.staffRole,
-    }));
+    // ✅ Update status
+    if (status) {
+      project.status = status;
 
-    await existProjectGroup.save();
+      if (status === "Testing") {
+        project.testingSiteLink = testingSiteLink || project.testingSiteLink;
+        project.finalSiteLink = null;
+        project.buildFileLink = null;
+      }
 
-         res.json({
-      message: "Project group staff updated successfully",
-      data: existProjectGroup,
+      if (status === "Completed") {
+        project.finalSiteLink = finalSiteLink || project.finalSiteLink;
+        project.buildFileLink = buildFileLink || project.buildFileLink;
+        project.testingSiteLink = null;
+      }
+    }
+
+    await project.save();
+
+    res.json({
+      message: "Project updated successfully",
+      data: project,
     });
+  } catch (error) {
+    console.error("Update Project Group Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
-    } catch (error) {
-       console.error("Update Project Group Error:", error);
-    res.status(500).json({ message: "Server error" }); 
-    }
-}
 
 const deleteProjectGroup = async (req, res) => {
   try {
