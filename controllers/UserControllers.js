@@ -190,7 +190,7 @@ if (generatedClientId) userData.clientId = generatedClientId;
 
 const updateUserByAdmin = async (req, res) => {
   try {
-    if (req.user.role !== "Admin") {
+    if (req.user.role !== "admin") {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -330,7 +330,7 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // 4. Allowed roles
-    const allowedRoles = ["Staff", "Manager/Hr", "Client", "Admin"];
+    const allowedRoles = ["staff", "manager/hr", "client", "admin"];
 
     // const safeRole = allowedRoles.includes(FormData.role)
     // ? FormData.role

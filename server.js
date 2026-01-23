@@ -9,13 +9,14 @@ const ChatRoute = require("./router/ChatRoute");
 const config = require("./config/config");
 const ConnectDB = require("./config/DBconfig");
 const crypto = require("crypto");
-
+const Subscribe = require('./router/SubscribeRoute')
 const UserRoute = require("./router/UserRoute");
 const BlogRoute = require("./router/BlogsRoute");
 const contactMessageRoute = require("./router/ContactMessageRoute");
 const TimesheetRoute = require("./router/TimeSheetRoute");
 const ProjectGroup = require("./router/ProjectGroupRoute");
 const gaRoute = require("./router/GoogleAnalytics");
+const DashboardCount = require("./router/dashboardStats");
 const globalErrorHandler = require("./middleware/GlobalErrorHandler");
 
 const cookieParser = require("cookie-parser");
@@ -53,6 +54,8 @@ app.use("/api/contact-messages", contactMessageRoute);
 app.use("/api/timesheet", TimesheetRoute);
 app.use("/api/projects", ProjectGroup);
 app.use("/api", gaRoute);
+app.use("/api/subscribe", Subscribe);
+app.use("/api/dashboard", DashboardCount);
 
 
 /* ---------- Global Error ---------- */

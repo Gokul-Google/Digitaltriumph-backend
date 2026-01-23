@@ -67,7 +67,11 @@ const updateTimeSheet = async (req, res) => {
     if (!existingSheet) {
       return res.status(404).json({ message: "Timesheet not found" });
     }
-
+// if (existingSheet.status === "Approved") {
+//       return res.status(403).json({
+//         message: "Approved timesheets cannot be edited"
+//       });
+//     }
      // Auto-generate projectId if missing
     if (!existingSheet.projectId) {
       updateData.projectId = await generateProjectId();
@@ -77,20 +81,19 @@ const updateTimeSheet = async (req, res) => {
     if (req.body.clientId) updateData.clientId = req.body.clientId;
     if (req.body.clientName) updateData.clientName = req.body.clientName;
     if (req.body.projectTitle) updateData.projectTitle = req.body.projectTitle;
-
     if (req.body.projectType) updateData.projectType = req.body.projectType;
     if (req.body.proposalType) updateData.proposalType = req.body.proposalType;
     if (req.body.task) updateData.task = req.body.task;
     if (req.body.workDate) updateData.workDate = req.body.workDate;
 
     // ⚠️ CRITICAL FIX
-    if (Array.isArray(req.body.sheets)) {
-      updateData.modules = req.body.sheets;
-    }
- // ✅ IMPORTANT FIX
-    // if (req.body.sheets && typeof req.body.sheets === "object") {
-    //   updateData.sheets = req.body.sheets;
+    // if (Array.isArray(req.body.sheets)) {
+    //   updateData.modules = req.body.sheets;
     // }
+ // ✅ IMPORTANT FIX
+    if (req.body.sheets && typeof req.body.sheets === "object") {
+      updateData.sheets = req.body.sheets;
+    }
     
     if (typeof req.body.totalAppHrs === "number") {
       updateData.totalAppHrs = req.body.totalAppHrs;
@@ -104,7 +107,17 @@ const updateTimeSheet = async (req, res) => {
     if (["Approved", "Rejected"].includes(req.body.status)) {
       updateData.status = req.body.status;
     }
+  if (existingSheet.status === "Approved") {
+      updateData.paymentAmount =
+        typeof req.body.paymentAmount === "number"
+          ? req.body.paymentAmount
+          : 0;
 
+      if (req.body.paymentStatus) {
+        updateData.paymentStatus = req.body.paymentStatus;
+        updateData.paymentUpdatedAt = new Date();
+      }
+    }
     const updatedSheet = await Timesheet.findByIdAndUpdate(
       req.params.id,
       { $set: updateData },   // ✅ prevents full overwrite

@@ -1,5 +1,6 @@
 const GroupedProject = require('../models/ProjectGroups');
 const TimeSheet = require('../models/TimeSheetModel');
+const User = require('../models/UserModel');
 
 
 const groupProject = async (req, res) => {
@@ -85,7 +86,15 @@ const updateProjectGroup = async (req, res) => {
         project.finalSiteLink = finalSiteLink || project.finalSiteLink;
         project.buildFileLink = buildFileLink || project.buildFileLink;
         project.testingSiteLink = null;
+
+        project.isGrouped = false;
+
+        //Decrement currentProject for each assigned staff
+        for(let s of project.staff){
+          await User.findByIdAndUpdate(s.staffId, {$inc :{currentProjects : -1 }});
+        }
       }
+      
     }
 
     await project.save();
@@ -99,6 +108,9 @@ const updateProjectGroup = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+
 
 
 const deleteProjectGroup = async (req, res) => {

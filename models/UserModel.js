@@ -44,9 +44,14 @@ const userSchema = mongoose.Schema({
         type: String,
         required: true,
     },
+    currentProjects:
+    {
+        type: Number,
+        default: 0,
+    },
   role: {
   type: String,
-  enum: ["Staff","Manager/Hr","Client","Admin"],
+  enum: ["staff","manager/hr","client","admin"],
   required: true,
 },
     projectName:
@@ -59,7 +64,7 @@ type:String,
   enum: ["FrontendDeveloper","BackendDeveloper","MobileDeveloper","UI-BlueprintDesign","DigitalMarketing"],
 default: null,
 required: function(){
-    return this.role === "Staff";
+    return this.role === "staff";
 }
 },
 },

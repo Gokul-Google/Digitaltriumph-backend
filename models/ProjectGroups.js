@@ -8,6 +8,10 @@ const groupedProjectSchema = new mongoose.Schema(
     projectTitle: { type: String, required: true }, // store project title directly
     projectType: { type: String, required: true },
     clientName: { type: String},
+    isGrouped: {
+  type: Boolean,
+  default: true,
+},
     status:{
     type: String,
     enum: ["Initial", "Testing", "Review", "Completed"],

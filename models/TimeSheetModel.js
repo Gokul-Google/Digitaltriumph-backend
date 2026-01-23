@@ -54,16 +54,27 @@ const timeSheetSchema = new mongoose.Schema({
 },
 
  sheets: {
-  type: Object,   // 👈 IMPORTANT
+  type: Object,   
   default: {}
 },
 
   totalAppHrs: Number,
   totalAdminHrs: Number,
+  paymentAmount: {
+  type: Number,
+  default: null
+},
+paymentStatus: {
+  type: String,
+  enum: ["Pending", "Paid"],
+  default: "Pending"
+},
+paymentUpdatedAt: Date,
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"
-  }
+  },
+  
 }, { timestamps: true });
 
 
